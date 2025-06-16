@@ -1,0 +1,18 @@
+{
+  "name": "survey-app-monorepo",
+  "version": "1.0.0",
+  "private": true,
+  "workspaces": [
+    "client",
+    "server"
+  ],
+  "scripts": {
+    "dev": "concurrently \"yarn --cwd server dev\" \"yarn --cwd client dev\"",
+    "build": "yarn --cwd server build && yarn --cwd client build",
+    "install:all": "yarn install && yarn --cwd client install && yarn --cwd server install",
+    "db:migrate": "yarn --cwd server db:generate && yarn --cwd server db:push && yarn --cwd server db:seed"
+  },
+  "devDependencies": {
+    "concurrently": "^8.2.2"
+  }
+}

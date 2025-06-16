@@ -1,0 +1,24 @@
+services:
+  server:
+    build:
+      context: .
+      dockerfile: server/Dockerfile
+    ports:
+      - "3001:3001"
+    volumes:
+      - ./server/dev.sqlite3:/app/dev.sqlite3
+    environment:
+      JWT_SECRET: super-secret-key-that-is-long-and-secure
+      DATABASE_URL: file:./dev.sqlite3
+      GEMINI_API_KEY: AIzaSyB3H2UwyKWthhknz282GLwBL2JUMBgYXeA
+
+  client:
+    build:
+      context: .
+      dockerfile: client/Dockerfile
+    ports:
+      - "8080:80"
+    depends_on:
+      - server
+    environment:
+      VITE_API_BASE_URL: http://localhost:3001/api

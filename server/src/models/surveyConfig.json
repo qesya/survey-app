@@ -1,0 +1,61 @@
+{
+  "title": "Customer Satisfaction Survey",
+  "questions": [
+    {
+      "type": "text",
+      "label": "What is your name?",
+      "name": "name",
+      "validation": {
+        "required": true,
+        "minLength": 3
+      }
+    },
+    {
+      "type": "textarea",
+      "label": "Please provide your feedback",
+      "name": "feedback",
+      "validation": {
+        "required": true,
+        "minLength": 10,
+        "maxLength": 200
+      }
+    },
+    {
+      "type": "multiple_choice",
+      "label": "How did you hear about us?",
+      "name": "referral",
+      "options": [
+        "Friends",
+        "Online Ad",
+        "Social Media",
+        "Other"
+      ],
+      "validation": {
+        "required": true
+      }
+    },
+    {
+      "type": "rating",
+      "label": "Rate our service",
+      "name": "rating",
+      "scale": 5,
+      "validation": {
+        "required": true
+      }
+    },
+    {
+      "type": "select",
+      "label": "What is your primary reason for using our service?",
+      "name": "primary_reason",
+      "options": [
+        "Business",
+        "Personal",
+        "Education",
+        "Research"
+      ],
+      "validation": {
+        "required": true
+      }
+    }
+  ]
+}
