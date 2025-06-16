@@ -1,68 +1,95 @@
-import { createSlice, createAsyncThunk, PayloadAction } from '@reduxjs/toolkit';
-import type { SurveyState, SurveyResponse } from '@/types/survey';
-import { surveyApi } from '@/services/api';
+import { createSlice, type PayloadAction } from "@reduxjs/toolkit";
+
+import { fetchSurveyConfig, submitSurveyResponse } from "./surveyThunks";
+
+export interface ValidationRules {
+  required?: boolean;
+  minLength?: number;
+  maxLength?: number;
+}
+
+export interface Question {
+  type: "text" | "textarea" | "multiple_choice" | "rating" | "select";
+  label: string;
+  name: string;
+  options?: string[];
+  scale?: number;
+  validation: ValidationRules;
+}
+
+export interface SurveyConfig {
+  title: string;
+  questions: Question[];
+}
+
+export interface SurveyResponse {
+  [key: string]: string | number;
+}
+
+interface SurveyState {
+  config: SurveyConfig | null;
+  responses: SurveyResponse;
+  status: "idle" | "loading" | "succeeded" | "failed";
+  submissionStatus: "idle" | "loading" | "succeeded" | "failed";
+  error: any | null;
+  submissionError: any | null;
+}
 
 const initialState: SurveyState = {
   config: null,
   responses: {},
-  loading: false,
+  status: "idle",
+  submissionStatus: "idle",
   error: null,
+  submissionError: null,
 };
 
-export const fetchSurveyConfig = createAsyncThunk(
-  'survey/fetchConfig',
-  async () => {
-    return await surveyApi.getConfig();
-  }
-);
-
-export const submitSurvey = createAsyncThunk(
-  'survey/submit',
-  async (responses: SurveyResponse) => {
-    await surveyApi.submitResponse(responses);
-  }
-);
-
 const surveySlice = createSlice({
-  name: 'survey',
+  name: "survey",
   initialState,
   reducers: {
-    updateResponse: (state: SurveyState, action: PayloadAction<{ name: string; value: string | number }>) => {
-      const { name, value } = action.payload;
-      state.responses[name] = value;
+    updateResponse: (
+      state,
+      action: PayloadAction<{ name: string; value: string | number }>
+    ) => {
+      state.responses[action.payload.name] = action.payload.value;
     },
-    clearResponses: (state: SurveyState) => {
-      state.responses = {};
+    resetSubmissionStatus: (state) => {
+      state.submissionStatus = "idle";
+      state.submissionError = null;
     },
   },
   extraReducers: (builder) => {
     builder
-      .addCase(fetchSurveyConfig.pending, (state: SurveyState) => {
-        state.loading = true;
-        state.error = null;
+      .addCase(fetchSurveyConfig.pending, (state) => {
+        state.status = "loading";
       })
-      .addCase(fetchSurveyConfig.fulfilled, (state: SurveyState, action) => {
-        state.loading = false;
-        state.config = action.payload;
+      .addCase(
+        fetchSurveyConfig.fulfilled,
+        (state, action: PayloadAction<SurveyConfig>) => {
+          state.status = "succeeded";
+          state.config = action.payload;
+        }
+      )
+      .addCase(fetchSurveyConfig.rejected, (state, action) => {
+        state.status = "failed";
+        state.error = action.payload;
       })
-      .addCase(fetchSurveyConfig.rejected, (state: SurveyState, action) => {
-        state.loading = false;
-        state.error = action.error.message || 'Failed to fetch survey config';
+      .addCase(submitSurveyResponse.pending, (state) => {
+        state.submissionStatus = "loading";
+        state.submissionError = null;
       })
-      .addCase(submitSurvey.pending, (state: SurveyState) => {
-        state.loading = true;
-        state.error = null;
-      })
-      .addCase(submitSurvey.fulfilled, (state: SurveyState) => {
-        state.loading = false;
+      .addCase(submitSurveyResponse.fulfilled, (state) => {
+        state.submissionStatus = "succeeded";
         state.responses = {};
       })
-      .addCase(submitSurvey.rejected, (state: SurveyState, action) => {
-        state.loading = false;
-        state.error = action.error.message || 'Failed to submit survey';
+      .addCase(submitSurveyResponse.rejected, (state, action) => {
+        state.submissionStatus = "failed";
+        state.submissionError = action.payload;
       });
   },
 });
 
-export const { updateResponse, clearResponses } = surveySlice.actions;
+export const { updateResponse, resetSubmissionStatus } = surveySlice.actions;
+
 export default surveySlice.reducer;

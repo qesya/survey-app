@@ -1,34 +1,26 @@
-export type ValidationRules = {
-  required?: boolean;
+export interface ValidationRules {
+  required: boolean;
   minLength?: number;
   maxLength?: number;
-  pattern?: string;
-};
+}
 
-export type Question = {
-  type: 'text' | 'multiple_choice' | 'rating';
+export interface Question {
+  type: 'text' | 'multiple_choice' | 'rating' | 'textarea';
   label: string;
   name: string;
+  validation: ValidationRules;
   options?: string[];
   scale?: number;
-  validation?: ValidationRules;
-};
+}
 
-export type SurveyConfig = {
+export interface SurveyConfig {
   title: string;
   questions: Question[];
-};
+}
 
-export type SurveyResponse = {
-  [key: string]: string | number;
-};
-
-export type SurveyState = {
-  config: SurveyConfig | null;
-  responses: SurveyResponse;
-  loading: boolean;
-  error: string | null;
-};
+export interface SurveyResponse {
+  [key: string]: string | number | undefined;
+}
 
 export interface ValidationErrors {
     [key: string]: string;

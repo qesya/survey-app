@@ -1,11 +1,18 @@
 import React, { useState } from "react";
 import axios from "axios";
+
 import MainLayout from "@/components/templates/MainLayout";
 import { Button } from "@/components/atoms/Button";
 import { Input } from "@/components/atoms/Input";
 import { Label } from "@/components/atoms/Label";
 import { useAppDispatch } from "@/hooks/redux";
 import { loginSuccess } from "@/features/auth/authSlice";
+import { apiPost } from "@/lib/api";
+
+type LoginResponse = {
+  token: string;
+  email: string;
+};
 
 const LoginPage: React.FC<{ onSwitchToSurvey: () => void }> = ({
   onSwitchToSurvey,
@@ -21,13 +28,12 @@ const LoginPage: React.FC<{ onSwitchToSurvey: () => void }> = ({
     setIsLoading(true);
     setError(null);
     try {
-      const response = await axios.post(`${import.meta.env.VITE_API_BASE_URL}/auth/login`, {
+      const response = await apiPost<LoginResponse>("/auth/login", {
         email,
         password,
       });
-      dispatch(
-        loginSuccess({ token: response.data.token, email: response.data.email })
-      );
+      const data = response.data;
+      dispatch(loginSuccess({ token: data.token, email: data.email }));
     } catch (err: unknown) {
       if (axios.isAxiosError(err)) {
         setError(

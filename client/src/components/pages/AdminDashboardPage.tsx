@@ -1,18 +1,23 @@
 import React, { useCallback, useEffect, useState } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
+import { format } from "date-fns";
+
 import MainLayout from "@/components/templates/MainLayout";
 import { Button } from "@/components/atoms/Button";
 import { useAppDispatch, useAppSelector } from "@/hooks/redux";
 import { logout } from "@/features/auth/authSlice";
 import type { Sentiment, StoredResponse } from "@/types/survey";
+import { apiGet, apiPost } from "@/lib/api";
+
+type SentimentResult = { loading: true } | ({ loading?: false } & Sentiment);
 
 const AdminDashboardPage: React.FC = () => {
   const [responses, setResponses] = useState<StoredResponse[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [sentimentResults, setSentimentResults] = useState<{
-    [key: number]: Sentiment | { loading: boolean };
+    [key: number]: SentimentResult;
   }>({});
 
   const token = useAppSelector((state) => state.auth.token);
@@ -27,11 +32,9 @@ const AdminDashboardPage: React.FC = () => {
         return;
       }
       try {
-        const response = await axios.get(
-          `${import.meta.env.VITE_API_BASE_URL}/admin/responses`,
-          {
-            headers: { Authorization: `Bearer ${token}` },
-          }
+        const response = await apiGet<StoredResponse[]>(
+          "/admin/responses",
+          { authToken: token }
         );
         setResponses(response.data);
       } catch (err: unknown) {
@@ -56,17 +59,17 @@ const AdminDashboardPage: React.FC = () => {
         [responseId]: { loading: true },
       }));
       try {
-        const response = await axios.post(
-          `${import.meta.env.VITE_API_BASE_URL}/admin/analyze`,
+        const response = await apiPost<Sentiment>(
+          "/admin/analyze",
           { text },
-          { headers: { Authorization: `Bearer ${token}` } }
+          { authToken: token }
         );
         setSentimentResults((prev) => ({
           ...prev,
           [responseId]: response.data,
         }));
       } catch {
-        alert("Failed to analyze sentiment.");
+        setError("Failed to analyze sentiment.");
         setSentimentResults((prev) => {
           const newState = { ...prev };
           delete newState[responseId];
@@ -146,14 +149,6 @@ const AdminDashboardPage: React.FC = () => {
     );
   }
 
-  if (error) {
-    return (
-      <MainLayout>
-        <p className="text-red-500">{error}</p>
-      </MainLayout>
-    );
-  }
-
   return (
     <MainLayout>
       <div className="flex justify-between items-center mb-6">
@@ -192,8 +187,15 @@ const AdminDashboardPage: React.FC = () => {
                   </div>
                 </div>
               )}
+              {error && (
+                <p className="text-red-500 mt-2">{error}</p>
+              )}
               <p className="text-xs text-gray-500 mt-2">
-                Submitted on: {new Date(res.created_at).toLocaleString()}
+                 {res.created_at ? (
+                  <>{format(new Date(res.created_at), "MMM dd, yyyy h:mm a")}</>
+                 ) : (
+                  "Unknown date"
+                 )}
               </p>
             </div>
           ))
