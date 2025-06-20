@@ -8,7 +8,7 @@ export const fetchSurveyConfig = createAsyncThunk<SurveyConfig>(
   "survey/fetchConfig",
   async (_, { rejectWithValue }) => {
     try {
-      const response = await apiGet<SurveyConfig>(`${import.meta.env.VITE_API_BASE_URL}/survey`);
+      const response = await apiGet<SurveyConfig>(`/survey`);
       return response.data;
     } catch (error) {
       if (axios.isAxiosError(error) && error.response) {
@@ -23,7 +23,7 @@ export const submitSurveyResponse = createAsyncThunk<void, SurveyResponse>(
   "survey/submitResponse",
   async (responseData, { rejectWithValue }) => {
     try {
-      await apiPost(`${import.meta.env.VITE_API_BASE_URL}/survey/responses`, responseData);
+      await apiPost(`/survey/responses`, responseData);
     } catch (error) {
       if (axios.isAxiosError(error) && error.response) {
         return rejectWithValue(error.response.data);
